@@ -1,5 +1,5 @@
 # linksimsinasc
-Scripts para linkage de bancos de dados SIM e SINASC ¢ 2026 Kenneth Rochel de Camargo & Claudia Medina Coeli
+Scripts para linkage de bancos de dados SIM e SINASC © 2026 Kenneth Rochel de Camargo & Claudia Medina Coeli
 
 Como usar (Linux):
 1. Copiar os arquivos para qualquer qualquer diretório
