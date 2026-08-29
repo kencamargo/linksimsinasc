@@ -1,5 +1,6 @@
 # linksimsinasc
 Scripts para linkage de bancos de dados SIM e SINASC
+
 Como usar (Linux):
 1. Copiar os arquivos para qualquer qualquer diretório
 2. Abrir um terminal no diretório com os arquivos copiados, rodar ./install.sh - cria o enviroment Python e instala módulos necessários
