@@ -220,7 +220,7 @@ def main():
         dbfile = "projeto.duckdb"
     conn = duckdb.connect(dbfile)
     threads = input("Numero de processos: ")
-    if threads:
+    if threads and int(threads) > 0:
     	conn.execute(f"SET THREADS TO {threads};")
     
     start_time = time.perf_counter()
