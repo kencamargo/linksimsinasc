@@ -96,10 +96,12 @@ def docompares(simrec, sinascrec):
                     
     return comparisons
 
+'''
 def check_index(conn, index_name):
     query = "SELECT 1 FROM duckdb_indexes WHERE index_name = ?;"
     exists = conn.execute(query, [index_name]).fetchone()
     return not exists
+'''    
 
 # FUNÇÃO DE WRAPPER ADAPTADA PARA O DUCKDB
 def duckdb_linkage_wrapper(sim_row, sinasc_row):
@@ -217,10 +219,9 @@ def main():
     if not dbfile:
         dbfile = "projeto.duckdb"
     conn = duckdb.connect(dbfile)
-    threads = input("Numero de processos (4): ")
-    if not threads:
-         threads = 4
-    conn.execute(f"SET THREADS TO {threads};")
+    threads = input("Numero de processos: ")
+    if threads:
+    	conn.execute(f"SET THREADS TO {threads};")
     
     start_time = time.perf_counter()
     
