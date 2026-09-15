@@ -46,10 +46,10 @@ def datediff(mindate: str, maxdate: str) -> int:
 def docompares(simrec, sinascrec):
     comparisons = [-10.38, -6.04, -1.84, -7.68, -7.19, 0] # discordancia
 
-    if simrec[2] is None or sinascrec[2] is None:
+    if simrec[DTNASC] is None or sinascrec[DTNASC] is None:
         comparisons[0] = 0.0
     else:
-        days = datediff(simrec[2], sinascrec[2]) # dtnasc
+        days = datediff(simrec[DTNASC], sinascrec[DTNASC]) 
         if days == -1:
             comparisons[0] = 0.0 
         elif days == 0:
@@ -59,10 +59,10 @@ def docompares(simrec, sinascrec):
         elif days <= 2:
             comparisons[0] = -0.41
             
-    if simrec[4] is None or sinascrec[4] is None:
+    if simrec[IDADEMAE] is None or sinascrec[IDADEMAE] is None:
         comparisons[1] = 0.0
     else:
-        anos = abs(int(simrec[4])-int(sinascrec[4])) # idademae
+        anos = abs(int(simrec[IDADEMAE])-int(sinascrec[IDADEMAE])) 
         if anos == 0:
             comparisons[1] = 11.69
         elif anos <= 1:
@@ -70,20 +70,20 @@ def docompares(simrec, sinascrec):
         elif anos <= 2:
             comparisons[1] = -0.13
     
-    if simrec[5] is None or sinascrec[5] is None:
+    if simrec[GRAVIDEZ] is None or sinascrec[GRAVIDEZ] is None:
         comparisons[2] = 0.0
-    elif simrec[5] == sinascrec[5]: # gravidez
+    elif simrec[GRAVIDEZ] == sinascrec[GRAVIDEZ]: 
         comparisons[2] = 0.1
         
-    if simrec[6] is None or sinascrec[6] is None:
+    if simrec[PARTO] is None or sinascrec[PARTO] is None:
         comparisons[3] = 0.0      
-    elif simrec[6] == sinascrec[6]: # parto
+    elif simrec[PARTO] == sinascrec[PARTO]: 
         comparisons[3] = 2.68 
         
-    if simrec[7] is None or sinascrec[7] is None:
+    if simrec[PESO] is None or sinascrec[PESO] is None:
         comparisons[4] = 0.0
     else:
-        peso = abs(int(simrec[7])-int(sinascrec[7])) # peso
+        peso = abs(int(simrec[PESO])-int(sinascrec[PESO])) 
         if peso == 0:
             comparisons[4] = 15.93
         elif peso <= 100:
@@ -95,6 +95,7 @@ def docompares(simrec, sinascrec):
     comparisons[5] = total
                     
     return comparisons
+
 
 '''
 def check_index(conn, index_name):
@@ -213,6 +214,7 @@ def runlinkage_parallel(conn, fnos, useflag=True):
     elapsed_time = end_time - start_time
     if int(update_time) > 0:
         print(f"Tempo transcorrido na atualizacao: {int(update_time)} segundos\nTempo total transcorrido no passo: {int(elapsed_time)} segundos.")
+    return markregs
 
 def main():
     dbfile = input("Nome da base de dados (projeto.duckdb): ")
@@ -278,35 +280,35 @@ def main():
     
     print("Executando passo 1...")
     
-    runlinkage_parallel(conn, fnos, useflag=False)
+    markregs = runlinkage_parallel(conn, fnos, useflag=False)
     
     fnos = [CODESTAB, SEXO, CODMUNRES]
     
     print("Executando passo 2...")
     
-    runlinkage_parallel(conn, fnos)
+    markregs += runlinkage_parallel(conn, fnos)
     
     fnos = [CODESTAB, SEXO, MESNASC]
     
     print("Executando passo 3...")
     
-    runlinkage_parallel(conn, fnos)
+    markregs += runlinkage_parallel(conn, fnos)
     
     fnos = [CODESTAB, CODMUNRES, MESNASC]
     
     print("Executando passo 4...")
     
-    runlinkage_parallel(conn, fnos)
+    markregs += runlinkage_parallel(conn, fnos)
     
     fnos = [UF, SEXO, CODMUNRES, MESNASC]
     
     print("Executando passo 5...")
     
-    runlinkage_parallel(conn, fnos)
+    markregs += runlinkage_parallel(conn, fnos)
         
     end_time = time.perf_counter()
     elapsed_time = end_time - start_time
-    print(f"Processamento completo\nTempo total transcorrido: {int(elapsed_time)} segundos.\n")
+    print(f"Processamento completo.\nTempo total transcorrido: {int(elapsed_time)} segundos.\nTotal de registros marcados: {markregs}")
     
     conn.close()
 

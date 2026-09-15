@@ -1,18 +1,41 @@
 import os.path
 import duckdb
 
+def checkfields(filename,fieldnames):
+    complete = True    
+    with open(filename, 'r') as file:
+        headerline = file.readline()
+        header = headerline[:-1].replace('"','').split(',')
+        #print(header)
+        for fld in fieldnames:
+            if fld not in header:
+                print(f'{filename} nao tem campo {fld}')
+                complete = False
+                break
+    return complete
+
+
 def main():
     simfile = input("Nome do arquivo SIM: ")    
     sinascfile = input("Nome do arquivo SINASC: ")
-    dbfile = input("Nome da base de dados (projeto.duckdb):")
+    dbfile = input("Nome da base de dados (projeto.duckdb): ")
     if not dbfile:
         dbfile = "projeto.duckdb"
 
     checkfiles = os.path.isfile('./'+simfile) and os.path.isfile('./'+sinascfile)
 
     if checkfiles:
-        conn = duckdb.connect(dbfile)
-        conn.execute("SET THREADS TO 4;")
+        fieldnames = 'CODESTAB,DTNASC,SEXO,IDADEMAE,GRAVIDEZ,PARTO,PESO,CODMUNRES,RACACOR,ESCMAE,QTDFILVIVO,QTDFILMORT,GESTACAO,SEMAGESTAC,IDADEMAE'.split(',')
+        test = checkfields(sinascfile, fieldnames)
+        if not test:
+            return
+        fieldnames.append('LOCOCOR')
+        fieldnames.append('CODMUNOCOR')    
+        test = checkfields(simfile, fieldnames)
+        if not test:
+            return
+        conn = duckdb.connect(dbfile)        
+        #conn.execute("SET THREADS TO 4;")
         conn.execute("DROP TABLE IF EXISTS sim;")
         conn.execute("DROP TABLE IF EXISTS sinasc;")
         conn.execute(
@@ -61,6 +84,7 @@ SELECT
             IDADEMAE = CASE WHEN IDADEMAE IN ('99', 'NA', '') THEN NULL ELSE IDADEMAE END,
             ESCMAE = CASE WHEN ESCMAE IN ('9', 'NA', '') THEN NULL ELSE ESCMAE END,
             QTDFILMORT = CASE WHEN QTDFILMORT IN ('99', 'NA', '') THEN NULL ELSE QTDFILMORT END,
+            QTDFILVIVO = CASE WHEN QTDFIVIVO IN ('99', 'NA', '') THEN NULL ELSE QTDFILVIVO END,
             GRAVIDEZ = CASE WHEN GRAVIDEZ IN ('9', 'NA', '') THEN NULL ELSE GRAVIDEZ END,
             SEMAGESTAC = CASE WHEN SEMAGESTAC IN ('99', 'NA', '') THEN NULL ELSE SEMAGESTAC END,
             GESTACAO = CASE WHEN GESTACAO IN ('9', 'NA', '') THEN NULL ELSE GESTACAO END,
@@ -76,7 +100,8 @@ SELECT
                 LOCOCOR IN ('9', 'NA', '') OR 
                 IDADEMAE IN ('99', 'NA', '') OR 
                 ESCMAE IN ('9', 'NA', '') OR 
-                QTDFILMORT IN ('99', 'NA', '') OR 
+                QTDFILMORT IN ('99', 'NA', '') OR
+                QTDFIVIVO IN ('99', 'NA', '') OR  
                 GRAVIDEZ IN ('9', 'NA', '') OR 
                 SEMAGESTAC IN ('99', 'NA', '') OR 
                 GESTACAO IN ('9', 'NA', '') OR 
