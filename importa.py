@@ -15,7 +15,7 @@ def checkfields(filename,fieldnames):
     return complete
 
 
-def main():
+def runimport():
     simfile = input("Nome do arquivo SIM: ")    
     sinascfile = input("Nome do arquivo SINASC: ")
     dbfile = input("Nome da base de dados (projeto.duckdb): ")
@@ -151,6 +151,10 @@ SELECT
     else:
         print("Um ou ambos arquivos inexistente(s).")
     
+    return
+    
+def main():
+    runimport()    
 
 if __name__ == "__main__":
     main()

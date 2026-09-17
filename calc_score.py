@@ -1,9 +1,17 @@
+import os.path
 import duckdb
 
-def main():
+def runcalc():
     dbfile = input("Nome da base de dados (projeto.duckdb): ")
     if not dbfile:
         dbfile = "projeto.duckdb"
+        
+    checkfile = os.path.isfile('./'+dbfile)    
+    
+    if not checkfile:
+        print("Arquivo inexistente")
+        return
+        
     print("Entre valores com ponto para decimais.")
     vmax = input("Valor maximo: ")
     if not vmax:
@@ -78,6 +86,10 @@ SELECT
     )
     conn.close()
     print("Operacao completa.")
+    return
+    
+def main():
+    runcalc()    
 
 if __name__ == "__main__":
     main()

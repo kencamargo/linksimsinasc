@@ -226,7 +226,7 @@ def runlinkage_parallel(conn, fnos, useflag=True):
         print(f"Tempo transcorrido na atualizacao: {int(update_time)} segundos\nTempo total transcorrido no passo: {int(elapsed_time)} segundos.")
     return markregs
 
-def main():
+def runlink():
     dbfile = input("Nome da base de dados (projeto.duckdb): ")
     if not dbfile:
         dbfile = "projeto.duckdb"
@@ -327,6 +327,11 @@ def main():
     print(f"Processamento completo.\nTempo total transcorrido: {int(elapsed_time)} segundos.\nTotal de registros marcados: {markregs}\nTotal de pares gerados: {nrecs}")
     
     conn.close()
+    
+    return
+   
+def main():
+    runlink()   
 
 if __name__ == "__main__":
     main()

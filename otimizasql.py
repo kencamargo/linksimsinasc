@@ -1,9 +1,17 @@
+import os.path
 import duckdb
 
-def main():
+def optimize():
     dbfile = input("Nome da base de dados (projeto.duckdb): ")
     if not dbfile:
         dbfile = "projeto.duckdb"
+    
+    checkfile = os.path.isfile('./'+dbfile)    
+    
+    if not checkfile:
+        print("Arquivo inexistente")
+        return    
+        
     conn = duckdb.connect(dbfile)
     op = conn.execute(
     """
@@ -73,16 +81,20 @@ def main():
     FROM best_pairs;  
     """) 
     nrecs = op.fetchone() 
-    
+        
     op = conn.execute(f"""
     INSERT INTO best_pairs
     SELECT SIMUID, SINASCUID, CTOTAL 
     FROM pairs
-    WHERE CTOTAL >= {float(vmax)};
+    WHERE CTOTAL > {float(vmax)};
     """)
+    
     
     conn.close()
     print(f"Operacao completa.\nTotal processado: {nrecs[0]}")
+    return
 
+def main():
+    optimize()
 if __name__ == "__main__":
     main()    
