@@ -156,7 +156,11 @@ def runlinkage_parallel(conn, fnos, useflag=True):
     # Filtro opcional da flag
     flag_filter = "WHERE FLAG != '+'" if useflag else ""
     
-    #print("Iniciando processamento...")
+    op = conn.execute(f"""
+    SELECT COUNT(*) 
+    FROM pairs;  
+    """) 
+    nrecs = op.fetchone()[0] 
     
     # Executa o JOIN 
     query_process = f"""
@@ -191,6 +195,12 @@ def runlinkage_parallel(conn, fnos, useflag=True):
     elapsed_time = link_time - start_time
     print(f"Tempo transcorrido no link: {int(elapsed_time)} segundos.")
         
+    op = conn.execute(f"""
+    SELECT COUNT(*) 
+    FROM pairs;  
+    """) 
+    nrecs = op.fetchone()[0] - nrecs    
+        
     print("Atualizando campo FLAG na tabela SIM...")
     
     # Faz o Update em lote
@@ -207,7 +217,7 @@ def runlinkage_parallel(conn, fnos, useflag=True):
     cursor = conn.execute(query_update)
     markregs = cursor.fetchone()[0]
     
-    print(f"Registros marcados: {markregs}")
+    print(f"Registros marcados: {markregs}\nPares acrescentados: {nrecs}")
     
     end_time = time.perf_counter()
     update_time = end_time - link_time
@@ -305,10 +315,16 @@ def main():
     print("Executando passo 5...")
     
     markregs += runlinkage_parallel(conn, fnos)
+    
+    op = conn.execute(f"""
+    SELECT COUNT(*) 
+    FROM pairs;  
+    """) 
+    nrecs = op.fetchone()[0]
         
     end_time = time.perf_counter()
     elapsed_time = end_time - start_time
-    print(f"Processamento completo.\nTempo total transcorrido: {int(elapsed_time)} segundos.\nTotal de registros marcados: {markregs}")
+    print(f"Processamento completo.\nTempo total transcorrido: {int(elapsed_time)} segundos.\nTotal de registros marcados: {markregs}\nTotal de pares gerados: {nrecs}")
     
     conn.close()
 

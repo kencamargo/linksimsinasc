@@ -84,7 +84,7 @@ SELECT
             IDADEMAE = CASE WHEN IDADEMAE IN ('99', 'NA', '') THEN NULL ELSE IDADEMAE END,
             ESCMAE = CASE WHEN ESCMAE IN ('9', 'NA', '') THEN NULL ELSE ESCMAE END,
             QTDFILMORT = CASE WHEN QTDFILMORT IN ('99', 'NA', '') THEN NULL ELSE QTDFILMORT END,
-            QTDFILVIVO = CASE WHEN QTDFIVIVO IN ('99', 'NA', '') THEN NULL ELSE QTDFILVIVO END,
+            QTDFILVIVO = CASE WHEN QTDFILVIVO IN ('99', 'NA', '') THEN NULL ELSE QTDFILVIVO END,
             GRAVIDEZ = CASE WHEN GRAVIDEZ IN ('9', 'NA', '') THEN NULL ELSE GRAVIDEZ END,
             SEMAGESTAC = CASE WHEN SEMAGESTAC IN ('99', 'NA', '') THEN NULL ELSE SEMAGESTAC END,
             GESTACAO = CASE WHEN GESTACAO IN ('9', 'NA', '') THEN NULL ELSE GESTACAO END,
@@ -101,7 +101,7 @@ SELECT
                 IDADEMAE IN ('99', 'NA', '') OR 
                 ESCMAE IN ('9', 'NA', '') OR 
                 QTDFILMORT IN ('99', 'NA', '') OR
-                QTDFIVIVO IN ('99', 'NA', '') OR  
+                QTDFILVIVO IN ('99', 'NA', '') OR  
                 GRAVIDEZ IN ('9', 'NA', '') OR 
                 SEMAGESTAC IN ('99', 'NA', '') OR 
                 GESTACAO IN ('9', 'NA', '') OR 
