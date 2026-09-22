@@ -292,7 +292,7 @@ def runlink():
     
     markregs = runlinkage_parallel(conn, fnos, useflag=False)
     
-    fnos = [CODESTAB, SEXO, CODMUNRES]
+    fnos = [CODESTAB, CODMUNRES, MESNASC]
     
     print("Executando passo 2...")
     
@@ -304,7 +304,7 @@ def runlink():
     
     markregs += runlinkage_parallel(conn, fnos)
     
-    fnos = [CODESTAB, CODMUNRES, MESNASC]
+    fnos = [CODESTAB, SEXO, CODMUNRES]
     
     print("Executando passo 4...")
     
