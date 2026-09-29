@@ -1,5 +1,6 @@
 import duckdb
 import time
+import math
 from datetime import date, datetime
 
 UNIQUE_ID = 0
@@ -13,6 +14,8 @@ PESO = 7
 CODMUNRES = 8
 UF = 9
 MESNASC = 10
+
+LIM_MIN = 0.0
 
 def todate(datestr: str) -> date:
     if datestr is None:
@@ -44,12 +47,15 @@ def datediff(mindate: str, maxdate: str) -> int:
     return abs(int(diffstr))
 
 def docompares(simrec, sinascrec):
-    comparisons = [-10.38, -6.04, -1.84, -7.68, -7.19, 0] # discordancia
+    comparisons = [-10.38, -6.04, -1.84, -7.68, -7.19] # discordancia
+    diffs = [0.0,0.0,0.0,0.0,0.0,0.0]
 
     if simrec[DTNASC] is None or sinascrec[DTNASC] is None:
         comparisons[0] = 0.0
+        diffs[0] = float('nan')
     else:
         days = datediff(simrec[DTNASC], sinascrec[DTNASC]) 
+        diffs[0] = days
         if days == -1:
             comparisons[0] = 0.0 
         elif days == 0:
@@ -61,8 +67,10 @@ def docompares(simrec, sinascrec):
             
     if simrec[IDADEMAE] is None or sinascrec[IDADEMAE] is None:
         comparisons[1] = 0.0
+        diffs[1] = float('nan')
     else:
         anos = abs(int(simrec[IDADEMAE])-int(sinascrec[IDADEMAE])) 
+        diffs[1] = anos
         if anos == 0:
             comparisons[1] = 11.69
         elif anos <= 1:
@@ -72,18 +80,29 @@ def docompares(simrec, sinascrec):
     
     if simrec[GRAVIDEZ] is None or sinascrec[GRAVIDEZ] is None:
         comparisons[2] = 0.0
+        diffs[2] = float('nan')
     elif simrec[GRAVIDEZ] == sinascrec[GRAVIDEZ]: 
         comparisons[2] = 0.1
+        diffs[2] = 0.0
+    else:
+        diffs[2] = abs(int(simrec[GRAVIDEZ])-int(sinascrec[GRAVIDEZ])) 
+
         
     if simrec[PARTO] is None or sinascrec[PARTO] is None:
-        comparisons[3] = 0.0      
+        comparisons[3] = 0.0   
+        diffs[3] = float('nan')
     elif simrec[PARTO] == sinascrec[PARTO]: 
         comparisons[3] = 2.68 
+        diffs[3] = 0.0
+    else:
+        diffs[3] = abs(int(simrec[PARTO])-int(sinascrec[PARTO])) 
         
     if simrec[PESO] is None or sinascrec[PESO] is None:
         comparisons[4] = 0.0
+        diffs[4] = float('nan')
     else:
         peso = abs(int(simrec[PESO])-int(sinascrec[PESO])) 
+        diffs[4] = peso
         if peso == 0:
             comparisons[4] = 15.93
         elif peso <= 100:
@@ -92,9 +111,9 @@ def docompares(simrec, sinascrec):
             comparisons[4] = 0.52
             
     total = sum(comparisons)
-    comparisons[5] = total
+    diffs[5] = total
                     
-    return comparisons
+    return diffs
 
 
 '''
@@ -104,14 +123,7 @@ def check_index(conn, index_name):
     return not exists
 '''    
 
-# FUNÇÃO DE WRAPPER ADAPTADA PARA O DUCKDB
-def duckdb_linkage_wrapper(sim_row, sinasc_row):
-    """
-    Recebe structs do DuckDB mapeados como listas/tuplas no Python,
-    computa os sub-scores e retorna um dicionário estruturado.
-    """
-    # Mapeia as posições exatas esperadas por docompares
-    # UNIQUE_ID=0, CODESTAB=1, DTNASC=2, SEXO=3, IDADEMAE=4, GRAVIDEZ=5, PARTO=6, PESO=7...
+def duckdb_linkage_wrapper(sim_row, sinasc_row):    
     sim_mapped = [
         sim_row.get('UNIQUE_ID'), sim_row.get('CODESTAB'), sim_row.get('DTNASC'),
         sim_row.get('SEXO'), sim_row.get('IDADEMAE'), sim_row.get('GRAVIDEZ'),
@@ -129,7 +141,6 @@ def duckdb_linkage_wrapper(sim_row, sinasc_row):
     test = docompares(sim_mapped, sinasc_mapped)
     #score_total = sum(test)
     
-    # Retorna como dicionário compatível com STRUCT do DuckDB
     return {
         'cnasc': float(test[0]),
         'cidade': float(test[1]),
@@ -142,18 +153,15 @@ def duckdb_linkage_wrapper(sim_row, sinasc_row):
 def runlinkage_parallel(conn, fnos, useflag=True):
     start_time = time.perf_counter()
     
-    # Mapeia os índices de fnos para nomes de colunas
     colunas_map = {
         CODESTAB: "CODESTAB", SEXO: "SEXO", CODMUNRES: "CODMUNRES",
         DTNASC: "DTNASC", UNIQUE_ID: "UNIQUE_ID", MESNASC: "MESNASC",
-        UF: "UF" # adicione outros se fnos mudar
+        UF: "UF" 
     }
     
-    # Monta a cláusula ON de junção dinamicamente baseado em fnos
     join_conditions = [f"sim.{colunas_map[fno]} = sinasc.{colunas_map[fno]}" for fno in fnos]
     join_clause = " AND ".join(join_conditions)
     
-    # Filtro opcional da flag
     flag_filter = "WHERE FLAG != '+'" if useflag else ""
     
     op = conn.execute(f"""
@@ -162,7 +170,6 @@ def runlinkage_parallel(conn, fnos, useflag=True):
     """) 
     nrecs = op.fetchone()[0] 
     
-    # Executa o JOIN 
     query_process = f"""
         INSERT INTO pairs
         WITH calculo AS (
@@ -185,7 +192,7 @@ def runlinkage_parallel(conn, fnos, useflag=True):
             res_struct.cpeso as CPESO,
             round(res_struct.ctotal, 2) as CTOTAL
         FROM calculo
-        WHERE res_struct.ctotal >= 0    
+        WHERE res_struct.ctotal >= {LIM_MIN}    
         ON CONFLICT (SIMUID, SINASCUID) DO NOTHING;    
     """
 
@@ -203,15 +210,14 @@ def runlinkage_parallel(conn, fnos, useflag=True):
         
     print("Atualizando campo FLAG na tabela SIM...")
     
-    # Faz o Update em lote
-    ctotalmax = 49.92
+    CTOTALMAX = 49.92
     query_update = f"""
         UPDATE sim 
         SET FLAG = '+' 
         WHERE UNIQUE_ID IN (
             SELECT SIMUID 
             FROM pairs 
-            WHERE CTOTAL >= {ctotalmax}
+            WHERE CTOTAL >= {CTOTALMAX}
         ) AND FLAG <> '+';
     """
     cursor = conn.execute(query_update)
@@ -231,6 +237,11 @@ def runlink():
     if not dbfile:
         dbfile = "projeto.duckdb"
     conn = duckdb.connect(dbfile)
+    
+    valmin = input("Limiar minimo (0.0): ")
+    if valmin:
+        LIM_MIN = float(valmin)
+    
     threads = input("Numero de processos: ")
     if threads and int(threads) > 0:
     	conn.execute(f"SET THREADS TO {threads};")
@@ -281,8 +292,6 @@ def runlink():
     '''    
     )  
     
-    # Registra a UDF que calcula todos os scores individuais
-    # O tipo de retorno especifica a estrutura do STRUCT gerado dentro do SQL
     return_type = "STRUCT(cnasc FLOAT, cidade FLOAT, cgrav FLOAT, cparto FLOAT, cpeso FLOAT, ctotal FLOAT)"
     conn.create_function("calcular_scores", duckdb_linkage_wrapper, return_type=return_type)  
     
